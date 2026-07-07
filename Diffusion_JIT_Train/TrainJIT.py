@@ -10,8 +10,8 @@ from torchvision import transforms
 from torchvision.datasets import CIFAR10
 from torchvision.utils import save_image
 
-from Diffusion.Diffusion import GaussianDiffusionSampler, GaussianDiffusionTrainer
-from Diffusion.Model import UNet
+from Diffusion_JIT_Train.DiffusionJIT import GaussianDiffusionSampler, GaussianDiffusionTrainer
+from Diffusion_JIT_Train.ModelJIT import UNet
 
 # ---------------------------------------------------------
 # A100 OPTIMIZATIONS: Enable TF32 for Tensor Cores
