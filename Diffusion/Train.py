@@ -18,6 +18,8 @@ from Diffusion.Model import UNet
 # ---------------------------------------------------------
 torch.backends.cuda.matmul.allow_tf32 = True
 torch.backends.cudnn.allow_tf32 = True
+torch.backends.cudnn.benchmark = True  # ADD THIS LINE
+
 
 class EMA:
     """Exponential Moving Average of model weights."""
@@ -86,8 +88,8 @@ def train(modelConfig: Dict):
     # Note: Requires PyTorch 2.0+. If it fails, remove this line.
     # ---------------------------------------------------------
     print("Compiling model for A100... (This takes a minute)")
-    net_model = torch.compile(net_model)
-    
+    # net_model = torch.compile(net_model)
+    net_model = torch.compile(net_model, mode="max-autotune")
     ema_model = copy.deepcopy(net_model).eval().requires_grad_(False)
     ema = EMA(modelConfig["ema_decay"])
     
@@ -106,8 +108,8 @@ def train(modelConfig: Dict):
                 optimizer.zero_grad(set_to_none=True) # Slightly faster than standard zero_grad()
                 x_0 = images.to(device)
                 
-                # AMP Context Manager for fast FP16 execution
-                with torch.cuda.amp.autocast():
+                 #             with torch.cuda.amp.autocast():
+                with torch.autocast(device_type="cuda", dtype=torch.bfloat16):
                     loss = trainer(x_0).mean() 
                 
                 # Scaler handles the backwards pass to prevent FP16 gradient underflow
