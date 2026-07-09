@@ -27,15 +27,20 @@ class EMA:
         self.beta = beta
         self.step = 0
 
+    # def update_model_average(self, ma_model, current_model):
+    #     for current_params, ma_params in zip(current_model.parameters(), ma_model.parameters()):
+    #         old_weight, up_weight = ma_params.data, current_params.data
+    #         ma_params.data = self.update_average(old_weight, up_weight)
+    @torch.no_grad()
     def update_model_average(self, ma_model, current_model):
         for current_params, ma_params in zip(current_model.parameters(), ma_model.parameters()):
-            old_weight, up_weight = ma_params.data, current_params.data
-            ma_params.data = self.update_average(old_weight, up_weight)
+            # In-place multiplication and addition to completely prevent VRAM fragmentation
+            ma_params.data.mul_(self.beta).add_(current_params.data, alpha=1.0 - self.beta)
 
-    def update_average(self, old, new):
-        if old is None:
-            return new
-        return old * self.beta + (1 - self.beta) * new
+    # def update_average(self, old, new):
+    #     if old is None:
+    #         return new
+    #     return old * self.beta + (1 - self.beta) * new
 
     def step_ema(self, ema_model, model, step_start_ema=2000):
         if self.step < step_start_ema:
@@ -77,9 +82,11 @@ def train(modelConfig: Dict):
         net_model.load_state_dict(torch.load(os.path.join(
             modelConfig["save_weight_dir"], modelConfig["training_load_weight"]), map_location=device))
     
+    # Deepcopy the original model FIRST, before it gets wrapped by torch.compile!
+    ema_model = copy.deepcopy(net_model).eval().requires_grad_(False)
+    
     print("Compiling model for A100... (This takes a minute)")
     net_model = torch.compile(net_model, mode="max-autotune")
-    ema_model = copy.deepcopy(net_model).eval().requires_grad_(False)
     ema = EMA(modelConfig["ema_decay"])
     
     optimizer = torch.optim.Adam(net_model.parameters(), lr=modelConfig["lr"])
