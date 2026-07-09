@@ -3,12 +3,12 @@ from Diffusion_JIT_Train.TrainJIT import train, eval
 
 def main(model_config=None):
     modelConfig = {
-        "state": "train",             # "eval" or "train"
+        "state": "eval",             # "eval" or "train"
         "pred_space": "x0",           # What the network outputs: "x0", "eps", or "v"
         "loss_space": "v",            # Where MSE is calculated: "x0", "eps", or "v"
         "training_steps": 100000,     # CIFAR-10 paper trained for 800k steps exactly
-        "save_weight_interval": 10000,# Save weights every 10k steps
-        "batch_size": 1024,           # Match paper
+        "save_weight_interval": 5000,# Save weights every 10k steps
+        "batch_size": 64,           # Match paper
         "T": 1000,
         "channel": 128,
         "channel_mult": [1, 2, 2, 2], # Match paper
@@ -23,9 +23,9 @@ def main(model_config=None):
         "ema_decay": 0.9999,          # EMA decay rate from paper
         "device": "cuda:0", 
         "training_load_weight": None, 
-        "save_weight_dir": "./Checkpoints/",
+        "save_weight_dir": "./CheckpointsJIT_x0_v/",
         "test_load_weight": "ckpt_ema_100000.pt", 
-        "sampled_dir": "./SampledImgs/",
+        "sampled_dir": "./SampledImgs_JIT_x0_v/",
         "sampledNoisyImgName": "NoisyNoGuidenceImgs.png",
         "sampledImgName": "SampledNoGuidenceImgs.png",
         "nrow": 8
